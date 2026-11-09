@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LoanScout</title>
+<style>
+  :root{--bg:#f6f5f1;--card:#fff;--ink:#1d2321;--muted:#68706c;--line:#e3e1da;--accent:#0f6b52;
+        --ok:#0f6b52;--warn:#a86a00;--bad:#b3261e;--chip:#eef2ef}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.5 "Inter",system-ui,-apple-system,Segoe UI,sans-serif}
+  header{padding:22px 28px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:14px}
+  header h1{margin:0;font-size:22px;letter-spacing:-.01em} header span{color:var(--muted)}
+  main{display:grid;grid-template-columns:360px 1fr;gap:22px;padding:22px 28px;max-width:1400px;margin:auto}
+  @media(max-width:900px){main{grid-template-columns:1fr;padding:16px}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+  label{display:block;font-size:12px;color:var(--muted);margin:10px 0 3px;text-transform:uppercase;letter-spacing:.04em}
+  input,select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .checks{display:flex;flex-wrap:wrap;gap:10px;font-size:14px;margin-top:4px}
+  .checks label{all:unset;display:flex;gap:4px;align-items:center;font-size:14px}
+  .checks input{width:auto}
+  button{margin-top:16px;width:100%;padding:11px;border:0;border-radius:9px;background:var(--accent);color:#fff;font:600 15px inherit;cursor:pointer}
+  button:disabled{opacity:.6;cursor:wait}
+  h2{font-size:15px;margin:0 0 10px} h3{font-size:13px;margin:16px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600;color:#fff}
+  .approved{background:var(--ok)} .approved_with_warnings{background:var(--warn)} .needs_attention{background:var(--bad)}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+  .kpi{background:var(--chip);border-radius:10px;padding:10px 12px}
+  .kpi b{display:block;font-size:19px;font-variant-numeric:tabular-nums} .kpi small{color:var(--muted)}
+  table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+  th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right} th:first-child,td:first-child{text-align:left}
+  th{font-size:12px;color:var(--muted);font-weight:600}
+  .iter{border-left:3px solid var(--line);padding:6px 12px;margin:8px 0}
+  .iter.revise{border-color:var(--warn)} .iter.accept{border-color:var(--ok)} .iter.escalate{border-color:var(--bad)}
+  .issue{font-size:14px;margin:4px 0} .issue.blocking{color:var(--bad)} .issue.warning{color:var(--warn)}
+  .cite{font-size:13px;color:var(--muted);border-bottom:1px dashed var(--line);padding:6px 0}
+  .muted{color:var(--muted)} pre{white-space:pre-wrap;font-size:12px;background:var(--chip);padding:10px;border-radius:8px;max-height:300px;overflow:auto}
+  #out{min-height:300px}
+</style>
+</head>
+<body>
+<header><h1>LoanScout</h1><span>Agentic lending advisor for MSME project funding</span><span id="mode" class="muted"></span></header>
+<main>
+  <form class="card" id="f">
+    <h2>Business profile</h2>
+    <label>Load a sample</label><select id="sample"><option value="">—</option></select>
+    <label>Business name</label><input name="business_name" value="My Business">
+    <div class="row">
+      <div><label>Sector</label><select name="sector"><option>manufacturing</option><option>services</option><option>trading</option></select></div>
+      <div><label>Purpose</label><select name="purpose"><option>setup</option><option>machinery</option><option>working_capital</option><option>expansion</option></select></div>
+    </div>
+    <div class="row">
+      <div><label>Project cost (₹)</label><input name="project_cost" type="number" value="2500000"></div>
+      <div><label>Own contribution (₹)</label><input name="owner_contribution" type="number" value="300000"></div>
+    </div>
+    <div class="row">
+      <div><label>Monthly cash flow (₹)</label><input name="monthly_cash_flow" type="number" value="75000"></div>
+      <div><label>Collateral value (₹)</label><input name="collateral_value" type="number" value="0"></div>
+    </div>
+    <div class="row">
+      <div><label>Credit score</label><input name="credit_score" type="number" value="740"></div>
+      <div><label>Business age (yrs)</label><input name="business_age_years" type="number" step="0.5" value="0"></div>
+    </div>
+    <div class="row">
+      <div><label>Location</label><select name="location"><option>urban</option><option>rural</option></select></div>
+      <div><label>Stage</label><select name="is_greenfield"><option value="true">New (greenfield)</option><option value="false">Existing</option></select></div>
+    </div>
+    <label>Owner category</label>
+    <div class="checks" id="cats">
+      <label><input type="checkbox" value="woman">Woman</label><label><input type="checkbox" value="sc_st">SC/ST</label>
+      <label><input type="checkbox" value="obc">OBC</label><label><input type="checkbox" value="minority">Minority</label>
+    </div>
+    <div class="checks"><label><input type="checkbox" name="sells_to_large_buyers">Sells to large corporates / PSUs</label></div>
+    <label>What is the money for?</label><textarea name="goal" rows="2"></textarea>
+    <button id="go">Build funding plan</button>
+  </form>
+  <section class="card" id="out"><p class="muted">Fill the profile and run the advisor. The planner drafts a plan, the cost tool verifies every rupee, and the skeptic sends it back until it holds up.</p></section>
+</main>
+<script>
+const f = document.getElementById('f'), out = document.getElementById('out');
+const inr = n => '₹' + Math.round(n).toLocaleString('en-IN');
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+let SAMPLES = {};
+fetch('/health').then(r=>r.json()).then(h=>document.getElementById('mode').textContent=`· ${h.mode} mode${h.langfuse?' · Langfuse on':''}`);
+fetch('/scenarios').then(r=>r.json()).then(s=>{SAMPLES=s;const sel=document.getElementById('sample');
+  Object.keys(s).forEach(k=>sel.insertAdjacentHTML('beforeend',`<option>${k}</option>`));});
+document.getElementById('sample').onchange = e => {
+  const s = SAMPLES[e.target.value]; if(!s) return;
+  for (const [k,v] of Object.entries(s)) { const el=f.elements[k]; if(!el) continue;
+    if (el.type==='checkbox') el.checked=!!v; else el.value=String(v); }
+  document.querySelectorAll('#cats input').forEach(c=>c.checked=(s.owner_categories||[]).includes(c.value));
+};
+f.onsubmit = async e => {
+  e.preventDefault(); const btn=document.getElementById('go'); btn.disabled=true; btn.textContent='Agents working…';
+  const d = Object.fromEntries(new FormData(f));
+  const body = {...d, project_cost:+d.project_cost, owner_contribution:+d.owner_contribution,
+    monthly_cash_flow:+d.monthly_cash_flow, collateral_value:+d.collateral_value, credit_score:+d.credit_score,
+    business_age_years:+d.business_age_years, is_greenfield:d.is_greenfield==='true',
+    sells_to_large_buyers: f.elements.sells_to_large_buyers.checked,
+    owner_categories:[...document.querySelectorAll('#cats input:checked')].map(c=>c.value)};
+  if(!body.owner_categories.length) body.owner_categories=['general'];
+  try {
+    const r = await fetch('/plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const j = await r.json(); if(!r.ok) throw new Error(JSON.stringify(j.detail||j)); render(j);
+  } catch(err){ out.innerHTML = `<p class="issue blocking">${esc(err.message)}</p>`; }
+  btn.disabled=false; btn.textContent='Build funding plan';
+};
+function render(j){
+  const p=j.plan, rows=[`<tr><td>Own contribution</td><td>${inr(p.owner_contribution)}</td><td></td><td></td><td></td><td></td><td></td></tr>`];
+  if(p.subsidy) rows.push(`<tr><td>PMEGP margin-money subsidy</td><td>${inr(p.subsidy)}</td><td></td><td></td><td></td><td></td><td></td></tr>`);
+  p.line_items.forEach(l=>rows.push(`<tr><td>${esc(l.scheme_name)}${l.with_cgtmse?' <span class="muted">+ CGTMSE</span>':''}</td>
+    <td>${inr(l.amount)}</td><td>${l.rate_pct}%</td><td>${l.tenure_months} m</td><td>${inr(l.emi)}</td>
+    <td>${inr(l.total_cost_of_credit)}</td><td>${l.effective_apr_pct.toFixed(2)}%</td></tr>`));
+  out.innerHTML = `
+  <h2>${esc(p.line_items.length? 'Recommended funding plan':'No plan')} <span class="badge ${j.status}">${j.status.replaceAll('_',' ')}</span></h2>
+  <p>${esc(j.summary)}</p>
+  <div class="kpis">
+    <div class="kpi"><small>Funding</small><b>${inr(j.total_funding)}</b><small>of ${inr(j.project_cost)}</small></div>
+    <div class="kpi"><small>Monthly debt service</small><b>${inr(j.monthly_debt_service)}</b></div>
+    <div class="kpi"><small>DSCR</small><b>${j.dscr??'—'}</b><small>target ≥ 1.25</small></div>
+    <div class="kpi"><small>Total cost of credit</small><b>${inr(j.total_cost_of_credit)}</b></div>
+    <div class="kpi"><small>Weighted APR</small><b>${j.weighted_apr_pct.toFixed(2)}%</b></div>
+    <div class="kpi"><small>Self-correction rounds</small><b>${j.iterations}</b></div>
+  </div>
+  <table><tr><th>Source</th><th>Amount</th><th>Rate</th><th>Tenure</th><th>EMI</th><th>Cost of credit</th><th>Eff. APR</th></tr>${rows.join('')}</table>
+  <h3>Skeptic loop</h3>
+  ${j.critique_history.map(h=>`<div class="iter ${h.verdict}"><b>Round ${h.iteration}</b> · ${h.verdict} · DSCR ${h.dscr??'—'} · cost ${inr(h.total_cost_of_credit)}
+     ${h.blocking.map(b=>`<div class="issue blocking">✗ ${esc(b)}</div>`).join('')}</div>`).join('')}
+  ${j.open_issues.length?`<h3>Open issues</h3>${j.open_issues.map(i=>`<div class="issue ${i.severity}">${i.severity==='blocking'?'✗':'!'} ${esc(i.message)}</div>`).join('')}`:''}
+  <h3>Eligibility</h3><p class="muted">Eligible: ${j.eligible_schemes.join(', ')}</p>
+  ${Object.entries(j.rejected_schemes).map(([k,v])=>`<div class="cite"><b>${k}</b> — ${esc(v.join('; '))}</div>`).join('')}
+  <h3>Retrieved evidence</h3>
+  ${j.citations.slice(0,8).map(c=>`<div class="cite">${esc(c.text)} <span class="muted">(${c.score})</span></div>`).join('')}
+  <h3>Retrieval quality</h3><p class="muted">eligible recall ${j.retrieval_metrics.eligible_recall} · precision ${j.retrieval_metrics.retrieval_precision} · L2 mean similarity ${j.retrieval_metrics.level2_mean_score}</p>
+  <h3>Execution trace ${j.trace_url?`· <a href="${j.trace_url}" target="_blank">open in Langfuse</a>`:''}</h3>
+  <pre>${esc(j.trace.map(t=>t.step==='score'?`score ${t.name} = ${(+t.value).toFixed(3)}`:`${t.step} [${t.type}] ${t.duration_ms} ms  ${JSON.stringify(t.output||'')}`).join('\n'))}</pre>`;
+}
+</script>
+</body>
+</html>
